@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 interface UserAvatarProps {
   avatarUrl: string | null | undefined;
-  size: number;
+  size?: number;
   className?: string;
 }
 const UserAvatar = ({ size, className, avatarUrl }: UserAvatarProps) => {
