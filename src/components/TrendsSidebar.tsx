@@ -73,6 +73,7 @@ async function WhoToFollow() {
   );
 }
 
+//TODO cache this
 async function getTrendingTopics() {
   const result = await prisma.$queryRaw<{ hashtag: string; count: bigint }[]>`
         SELECT LOWER(unnest(regexp_matches(content, '#[[:alnum:]_]+', 'g'))) AS hashtag, COUNT(*) AS count

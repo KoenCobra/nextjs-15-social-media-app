@@ -1,11 +1,11 @@
-import { postData } from "@/lib/types";
+import { PostData } from "@/lib/types";
 import Link from "next/link";
 import React from "react";
 import UserAvatar from "../UserAvatar";
 import { formatRelativeDate } from "@/lib/utils";
 
 interface PostProps {
-  post: postData;
+  post: PostData;
 }
 const Post = ({ post }: PostProps) => {
   return (
