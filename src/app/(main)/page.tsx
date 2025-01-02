@@ -1,5 +1,6 @@
 import PostEditor from "@/components/posts/editor/PostEditor";
 import Post from "@/components/posts/Post";
+import TrendsSidebar from "@/components/TrendsSidebar";
 import prisma from "@/lib/prisma";
 import { postDataIncludes } from "@/lib/types";
 
@@ -16,6 +17,7 @@ export default async function Home() {
           <Post key={post.id} post={post} />
         ))}
       </div>
+      <TrendsSidebar />
     </main>
   );
 }
