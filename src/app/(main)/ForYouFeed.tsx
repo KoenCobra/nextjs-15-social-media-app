@@ -7,9 +7,8 @@ import kyInstance from "@/lib/ky";
 import { PostsPage } from "@/lib/types";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import React from "react";
 
-const ForYouFeed = () => {
+export default function ForYouFeed() {
   const {
     data,
     fetchNextPage,
@@ -18,7 +17,7 @@ const ForYouFeed = () => {
     isFetchingNextPage,
     status,
   } = useInfiniteQuery({
-    queryKey: ["posts-feed", "for-you"],
+    queryKey: ["post-feed", "for-you"],
     queryFn: ({ pageParam }) =>
       kyInstance
         .get(
@@ -30,24 +29,28 @@ const ForYouFeed = () => {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
 
-  const posts = data?.pages.flatMap((page) => page.posts) ?? [];
+  const posts = data?.pages.flatMap((page) => page.posts) || [];
 
-  if (status === "pending") return <PostsLoadingSkeleton />;
+  if (status === "pending") {
+    return <PostsLoadingSkeleton />;
+  }
 
-  if (status === "success" && posts.length === 0 && !hasNextPage) {
+  if (status === "success" && !posts.length && !hasNextPage) {
     return (
       <p className="text-center text-muted-foreground">
-        No one has posted anything yet
+        No one has posted anything yet.
       </p>
     );
   }
 
-  if (status === "error")
+  if (status === "error") {
     return (
       <p className="text-center text-destructive">
-        An error occurred while loading posts
+        An error occurred while loading posts.
       </p>
     );
+  }
+
   return (
     <InfiniteScrollContainer
       className="space-y-5"
@@ -59,6 +62,4 @@ const ForYouFeed = () => {
       {isFetchingNextPage && <Loader2 className="mx-auto my-3 animate-spin" />}
     </InfiniteScrollContainer>
   );
-};
-
-export default ForYouFeed;
+}

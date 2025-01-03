@@ -1,11 +1,14 @@
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
+import { getUserDataSelect } from "@/lib/types";
 import { formatNumber } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { Suspense } from "react";
+import FollowButton from "./FollowButton";
 import UserAvatar from "./UserAvatar";
+// import UserTooltip from "./UserTooltip";
 
 export default function TrendsSidebar() {
   return (
@@ -34,6 +37,7 @@ async function WhoToFollow() {
         },
       },
     },
+    select: getUserDataSelect(user.id),
     take: 5,
   });
 
@@ -58,7 +62,7 @@ async function WhoToFollow() {
             </div>
           </Link>
           {/* </UserTooltip> */}
-          {/* <FollowButton
+          <FollowButton
             userId={user.id}
             initialState={{
               followers: user._count.followers,
@@ -66,28 +70,33 @@ async function WhoToFollow() {
                 ({ followerId }) => followerId === user.id,
               ),
             }}
-          /> */}
+          />
         </div>
       ))}
     </div>
   );
 }
 
-//TODO cache this
-async function getTrendingTopics() {
-  const result = await prisma.$queryRaw<{ hashtag: string; count: bigint }[]>`
-        SELECT LOWER(unnest(regexp_matches(content, '#[[:alnum:]_]+', 'g'))) AS hashtag, COUNT(*) AS count
-        FROM posts
-        GROUP BY (hashtag)
-        ORDER BY count DESC, hashtag ASC
-        LIMIT 5
-    `;
+const getTrendingTopics = unstable_cache(
+  async () => {
+    const result = await prisma.$queryRaw<{ hashtag: string; count: bigint }[]>`
+            SELECT LOWER(unnest(regexp_matches(content, '#[[:alnum:]_]+', 'g'))) AS hashtag, COUNT(*) AS count
+            FROM posts
+            GROUP BY (hashtag)
+            ORDER BY count DESC, hashtag ASC
+            LIMIT 5
+        `;
 
-  return result.map((row) => ({
-    hashtag: row.hashtag,
-    count: Number(row.count),
-  }));
-}
+    return result.map((row) => ({
+      hashtag: row.hashtag,
+      count: Number(row.count),
+    }));
+  },
+  ["trending_topics"],
+  {
+    revalidate: 3 * 60 * 60,
+  },
+);
 
 async function TrendingTopics() {
   const trendingTopics = await getTrendingTopics();
