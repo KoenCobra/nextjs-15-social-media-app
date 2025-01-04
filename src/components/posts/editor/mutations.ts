@@ -1,4 +1,6 @@
+import { useSession } from "@/app/(main)/SessionProvider";
 import { useToast } from "@/components/ui/use-toast";
+import { PostsPage } from "@/lib/types";
 import {
   InfiniteData,
   QueryFilters,
@@ -6,16 +8,28 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { submitPost } from "./actions";
-import { PostsPage } from "@/lib/types";
 
-export const useSubmitPostMutation = () => {
+export function useSubmitPostMutation() {
   const { toast } = useToast();
+
   const queryClient = useQueryClient();
+
+  const { user } = useSession();
 
   const mutation = useMutation({
     mutationFn: submitPost,
     onSuccess: async (newPost) => {
-      const queryFilter: QueryFilters = { queryKey: ["posts-feed", "for-you"] };
+      const queryFilter = {
+        queryKey: ["post-feed"],
+        predicate(query) {
+          return (
+            query.queryKey.includes("for-you") ||
+            (query.queryKey.includes("user-posts") &&
+              query.queryKey.includes(user?.id))
+          );
+        },
+      } satisfies QueryFilters;
+
       await queryClient.cancelQueries(queryFilter);
 
       queryClient.setQueriesData<InfiniteData<PostsPage, string | null>>(
@@ -40,21 +54,23 @@ export const useSubmitPostMutation = () => {
 
       queryClient.invalidateQueries({
         queryKey: queryFilter.queryKey,
-        predicate: (query) => !query.state.data,
+        predicate(query) {
+          return queryFilter.predicate(query) && !query.state.data;
+        },
       });
 
       toast({
-        description: "Your post has been created.",
+        description: "Post created",
       });
     },
-    onError: (error) => {
+    onError(error) {
       console.error(error);
       toast({
-        description: "Failed to post. Please try again.",
         variant: "destructive",
+        description: "Failed to post. Please try again.",
       });
     },
   });
 
   return mutation;
-};
+}
