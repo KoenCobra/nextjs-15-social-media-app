@@ -5,10 +5,6 @@ import React from "react";
 import LoginForm from "./LoginForm";
 import loginImage from "@/assets/login-image.jpg";
 
-export const metadata: Metadata = {
-  title: "Login",
-};
-
 const page = () => {
   return (
     <main className="flex h-screen items-center justify-center p-5">
