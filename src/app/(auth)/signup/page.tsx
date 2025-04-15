@@ -1,11 +1,11 @@
-import { Metadata } from "next";
 import React from "react";
 import signupImage from "@/assets/signup-image.jpg";
 import Image from "next/image";
 import Link from "next/link";
 import SignUpForm from "./SignUpForm";
+import { Metadata } from "next";
 
-export const metaData: Metadata = {
+const metaData: Metadata = {
   title: "Sign Up",
 };
 
@@ -36,5 +36,5 @@ const SignUp = () => {
     </main>
   );
 };
-
+export { metaData };
 export default SignUp;
