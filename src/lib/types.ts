@@ -1,6 +1,13 @@
 import { Prisma } from "@prisma/client";
 
-export function getUserDataSelect(loggedInUserId: string) {
+export interface User {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+}
+
+export function getUserDataSelect(loggedInUserId?: string) {
   return {
     id: true,
     username: true,
@@ -8,14 +15,16 @@ export function getUserDataSelect(loggedInUserId: string) {
     avatarUrl: true,
     bio: true,
     createdAt: true,
-    followers: {
-      where: {
-        followerId: loggedInUserId,
-      },
-      select: {
-        followerId: true,
-      },
-    },
+    followers: loggedInUserId
+      ? {
+          where: {
+            followerId: loggedInUserId,
+          },
+          select: {
+            followerId: true,
+          },
+        }
+      : false,
     _count: {
       select: {
         posts: true,
@@ -29,28 +38,32 @@ export type UserData = Prisma.UserGetPayload<{
   select: ReturnType<typeof getUserDataSelect>;
 }>;
 
-export function getPostDataInclude(loggedInUserId: string) {
+export function getPostDataInclude(loggedInUserId?: string) {
   return {
     user: {
       select: getUserDataSelect(loggedInUserId),
     },
     attachments: true,
-    likes: {
-      where: {
-        userId: loggedInUserId,
-      },
-      select: {
-        userId: true,
-      },
-    },
-    bookmarks: {
-      where: {
-        userId: loggedInUserId,
-      },
-      select: {
-        userId: true,
-      },
-    },
+    likes: loggedInUserId
+      ? {
+          where: {
+            userId: loggedInUserId,
+          },
+          select: {
+            userId: true,
+          },
+        }
+      : false,
+    bookmarks: loggedInUserId
+      ? {
+          where: {
+            userId: loggedInUserId,
+          },
+          select: {
+            userId: true,
+          },
+        }
+      : false,
     _count: {
       select: {
         likes: true,
@@ -69,7 +82,7 @@ export interface PostsPage {
   nextCursor: string | null;
 }
 
-export function getCommentDataInclude(loggedInUserId: string) {
+export function getCommentDataInclude(loggedInUserId?: string) {
   return {
     user: {
       select: getUserDataSelect(loggedInUserId),

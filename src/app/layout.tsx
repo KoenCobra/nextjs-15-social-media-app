@@ -1,8 +1,9 @@
+import { Toaster } from "@/components/ui/toaster";
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
+import { ThemeProvider } from "next-themes";
 import localFont from "next/font/local";
 import "./globals.css";
-import { ThemeProvider } from "next-themes";
-import { Toaster } from "@/components/ui/toaster";
 import ReactQueryProvider from "./ReactQueryProvider";
 
 const geistSans = localFont({
@@ -28,23 +29,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable}`}
-      >
-        <ReactQueryProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
-        </ReactQueryProvider>
-        <Toaster />
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body
+          suppressHydrationWarning
+          className={`${geistSans.variable} ${geistMono.variable}`}
+        >
+          <ReactQueryProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+            </ThemeProvider>
+          </ReactQueryProvider>
+          <Toaster />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

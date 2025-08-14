@@ -1,13 +1,13 @@
 "use server";
 
-import { validateRequest } from "@/auth";
+import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 import { getPostDataInclude } from "@/lib/types";
 
 export async function deletePost(id: string) {
-  const { user } = await validateRequest();
+  const { userId } = await auth();
 
-  if (!user) throw new Error("Unauthorized");
+  if (!userId) throw new Error("Unauthorized");
 
   const post = await prisma.post.findUnique({
     where: { id },
@@ -15,11 +15,11 @@ export async function deletePost(id: string) {
 
   if (!post) throw new Error("Post not found");
 
-  if (post.userId !== user.id) throw new Error("Unauthorized");
+  if (post.userId !== userId) throw new Error("Unauthorized");
 
   const deletedPost = await prisma.post.delete({
     where: { id },
-    include: getPostDataInclude(user.id),
+    include: getPostDataInclude(userId),
   });
 
   return deletedPost;

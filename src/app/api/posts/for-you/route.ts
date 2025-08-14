@@ -1,22 +1,22 @@
-import { validateRequest } from "@/auth";
+import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 import { getPostDataInclude, PostsPage } from "@/lib/types";
 import { NextRequest } from "next/server";
 
 export const GET = async (req: NextRequest) => {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const cursor = req.nextUrl.searchParams.get("cursor") || undefined;
 
     const pageSize = 10;
 
-    const { user } = await validateRequest();
-
-    if (!user) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const posts = await prisma.post.findMany({
-      include: getPostDataInclude(user.id),
+      include: getPostDataInclude(userId),
       orderBy: { createdAt: "desc" },
       take: pageSize + 1,
       cursor: cursor ? { id: cursor } : undefined,

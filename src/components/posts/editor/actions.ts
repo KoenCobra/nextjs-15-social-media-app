@@ -1,25 +1,36 @@
 "use server";
 
-import { validateRequest } from "@/auth";
+import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 import { getPostDataInclude } from "@/lib/types";
 import { createPostSchema } from "@/lib/validation";
 
 export const submitPost = async (input: string) => {
-  const { user } = await validateRequest();
+  const { userId } = await auth();
 
-  if (!user) {
+  if (!userId) {
     throw new Error("Unauthorized");
   }
 
   const { content } = createPostSchema.parse({ content: input });
 
+  // Ensure user exists in database, create if not
+  await prisma.user.upsert({
+    where: { id: userId },
+    update: {},
+    create: {
+      id: userId,
+      username: userId, // Will be updated via webhook
+      displayName: "User", // Will be updated via webhook
+    },
+  });
+
   const newPost = await prisma.post.create({
     data: {
       content,
-      userId: user.id,
+      userId,
     },
-    include: getPostDataInclude(user.id),
+    include: getPostDataInclude(userId),
   });
 
   return newPost;

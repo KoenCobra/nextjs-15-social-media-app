@@ -1,16 +1,18 @@
-import { validateRequest } from "@/auth";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import SessionProvider from "./SessionProvider";
-import Navbar from "./Navbar";
 import MenuBar from "./MenuBar";
+import Navbar from "./Navbar";
+import SessionProvider from "./SessionProvider";
 
 const layout = async ({ children }: { children: React.ReactNode }) => {
-  const session = await validateRequest();
+  const { userId } = await auth();
 
-  if (!session.user) redirect("/login");
+  if (!userId) {
+    redirect("/sign-in");
+  }
 
   return (
-    <SessionProvider value={session}>
+    <SessionProvider>
       <div className="flex min-h-screen flex-col">
         <Navbar />
         <div className="mx-auto flex w-full max-w-7xl grow gap-5 p-5">

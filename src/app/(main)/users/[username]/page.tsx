@@ -1,4 +1,4 @@
-import { validateRequest } from "@/auth";
+import { auth } from "@clerk/nextjs/server";
 import FollowButton from "@/components/FollowButton";
 import FollowerCount from "@/components/FollowerCount";
 import TrendsSidebar from "@/components/TrendsSidebar";
@@ -9,13 +9,13 @@ import { formatNumber } from "@/lib/utils";
 import { formatDate } from "date-fns";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import React, { cache } from "react";
+import { cache } from "react";
 import UserPosts from "./UserPosts";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     username: string;
-  };
+  }>;
 }
 
 const getUser = cache(async (username: string, loggedInUserId: string) => {
@@ -35,35 +35,33 @@ const getUser = cache(async (username: string, loggedInUserId: string) => {
 });
 
 export async function generateMetadata({
-  params: { username },
+  params,
 }: PageProps): Promise<Metadata> {
-  const { user: loggedInUser } = await validateRequest();
+  const { userId } = await auth();
+  if (!userId) return {};
 
-  if (!loggedInUser) return {};
-
-  const user = await getUser(username, loggedInUser.id);
+  const { username } = await params;
+  const user = await getUser(username, userId);
 
   return {
     title: `${user.displayName} (@${user.username})`,
   };
 }
 
-const page = async ({ params: { username } }: PageProps) => {
-  const { user: loggedInUser } = await validateRequest();
+const page = async ({ params }: PageProps) => {
+  const { userId } = await auth();
+  
+  if (!userId) {
+    notFound();
+  }
 
-  if (!loggedInUser)
-    return (
-      <p className="text-destructive">
-        You are not authorized to view this page
-      </p>
-    );
-
-  const user = await getUser(username, loggedInUser.id);
+  const { username } = await params;
+  const user = await getUser(username, userId);
 
   return (
     <main className="flex w-full min-w-0 gap-5">
       <div className="w-full min-w-0 space-y-5">
-        <UserProfile user={user} loggedInUserId={loggedInUser.id} />
+        <UserProfile user={user} loggedInUserId={userId} />
         <div className="rounded-2xl bg-card p-5 shadow-sm">
           <h2 className="text-center text-2xl font-bold">
             {user.displayName}&apos;s posts
@@ -114,9 +112,8 @@ const UserProfile = async ({ user, loggedInUserId }: UserProfileProps) => {
           </div>
         </div>
         {user.id === loggedInUserId ? (
-          <div>edit</div>
+          <div>Edit Profile</div>
         ) : (
-          // <EditProfileButton user={user} />
           <FollowButton userId={user.id} initialState={followerInfo} />
         )}
       </div>

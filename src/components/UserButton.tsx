@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "@/app/(main)/SessionProvider";
-import React from "react";
+import { SignOutButton } from "@clerk/nextjs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,14 +14,12 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 
-import UserAvatar from "./UserAvatar";
-import Link from "next/link";
-import { Check, LogOutIcon, Monitor, Moon, Sun, UserIcon } from "lucide-react";
-import { logout } from "@/app/(auth)/actions";
 import { cn } from "@/lib/utils";
-import { useTheme } from "next-themes";
 import { DropdownMenuSub } from "@radix-ui/react-dropdown-menu";
-import { useQueryClient } from "@tanstack/react-query";
+import { Check, LogOutIcon, Monitor, Moon, Sun, UserIcon } from "lucide-react";
+import { useTheme } from "next-themes";
+import Link from "next/link";
+import UserAvatar from "./UserAvatar";
 
 interface UserButtonProps {
   className?: string;
@@ -31,7 +29,6 @@ const UserButton = ({ className }: UserButtonProps) => {
 
   const { theme, setTheme } = useTheme();
 
-  const queryClient = useQueryClient();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -40,9 +37,11 @@ const UserButton = ({ className }: UserButtonProps) => {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuLabel>Logged in as @{user?.username}</DropdownMenuLabel>
+        <DropdownMenuLabel>
+          {user?.displayName} (@{user?.username})
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <Link href={`users/${user?.username}`}>
+        <Link href={`/users/${user?.username}`}>
           <DropdownMenuItem>
             <UserIcon className="mr-2 size-4" /> Profile
           </DropdownMenuItem>
@@ -73,14 +72,12 @@ const UserButton = ({ className }: UserButtonProps) => {
           </DropdownMenuPortal>
         </DropdownMenuSub>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => {
-            queryClient.clear();
-            logout();
-          }}
-        >
-          <LogOutIcon className="mr-2 size-4" /> Logout
-        </DropdownMenuItem>
+        <SignOutButton>
+          <DropdownMenuItem>
+            <LogOutIcon className="mr-2 size-4" />
+            Sign Out
+          </DropdownMenuItem>
+        </SignOutButton>
       </DropdownMenuContent>
     </DropdownMenu>
   );

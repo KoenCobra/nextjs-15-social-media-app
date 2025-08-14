@@ -1,4 +1,3 @@
-import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { getUserDataSelect } from "@/lib/types";
 import { formatNumber } from "@/lib/utils";
@@ -22,22 +21,23 @@ export default function TrendsSidebar() {
 }
 
 async function WhoToFollow() {
-  const { user } = await validateRequest();
+  const { auth } = await import("@clerk/nextjs/server");
+  const { userId } = await auth();
 
-  if (!user) return null;
+  if (!userId) return null;
 
   const usersToFollow = await prisma.user.findMany({
     where: {
       NOT: {
-        id: user.id,
+        id: userId,
       },
       followers: {
         none: {
-          followerId: user.id,
+          followerId: userId,
         },
       },
     },
-    select: getUserDataSelect(user.id),
+    select: getUserDataSelect(userId),
     take: 5,
   });
 
@@ -67,7 +67,7 @@ async function WhoToFollow() {
             initialState={{
               followers: user._count.followers,
               isFollowedByUser: user.followers.some(
-                ({ followerId }) => followerId === user.id,
+                ({ followerId }) => followerId === userId,
               ),
             }}
           />
